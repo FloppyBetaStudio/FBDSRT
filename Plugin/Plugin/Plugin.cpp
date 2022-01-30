@@ -31,6 +31,8 @@ map<string, int> apiTextBox;//目标的编辑框的句柄列表
 //map<string, int> apiButton;//目标按钮的句柄列表//用编辑框内容被改变的事件代替
 //记录需要用到回调的插件的列表
 vector<string> callback_onPlayerJoin;//当玩家加入游戏时触发
+vector<string> callback_onPlayerChat;//当玩家发言时触发
+vector<string> callback_onPlayerAttack;//当玩家攻击实体时触发
 
 //UTF8的string转换为unicode
 wstring UTF8ToUnicode(const string& s)
@@ -144,6 +146,25 @@ public:
 
 	}
 
+	static void eventReg_onPlayerChat(string pluginName) {
+		vector<string>::iterator it = find(callback_onPlayerChat.begin(), callback_onPlayerChat.end(), pluginName);
+		if (it != callback_onPlayerChat.end()) {//如果已经存在则直接返回
+			return;
+		}
+		//将插件标识名称添加到对应的API事件列表
+		callback_onPlayerChat.push_back(pluginName);
+
+	}
+
+	static void eventReg_onPlayerAttack(string pluginName) {
+		vector<string>::iterator it = find(callback_onPlayerAttack.begin(), callback_onPlayerAttack.end(), pluginName);
+		if (it != callback_onPlayerAttack.end()) {//如果已经存在则直接返回
+			return;
+		}
+		//将插件标识名称添加到对应的API事件列表
+		callback_onPlayerAttack.push_back(pluginName);
+
+	}
 };
 
 //web服务器的线程，为了防止web服务器阻塞主线程
@@ -202,6 +223,42 @@ void thread_webServer() {
 
 		});
 
+	//在玩家发言时触发事件 参数同上
+	svr.Get("/eventReg_onPlayerChat", [](const httplib::Request& req, httplib::Response& res) {
+		if (!webServerFun::safety_check(req.get_param_value("key"))) {
+			res.set_content("Error: Need key", "text/plain");
+			return;
+		}
+
+		//不出意外，调用相关绑定方法
+		if (req.get_param_value("name") == "") {
+			res.set_content("Error: Need plugin name", "text/plain");
+			return;
+		}
+		webServerFun::eventReg_onPlayerChat(req.get_param_value("name"));
+		//操作变量通常不会出意外，直接返回true
+		res.set_content("true", "text/plain");
+
+		});
+
+
+	//在玩家攻击实体时触发事件 参数同上
+	svr.Get("/eventReg_onPlayerAttack", [](const httplib::Request& req, httplib::Response& res) {
+		if (!webServerFun::safety_check(req.get_param_value("key"))) {
+			res.set_content("Error: Need key", "text/plain");
+			return;
+		}
+
+		//不出意外，调用相关绑定方法
+		if (req.get_param_value("name") == "") {
+			res.set_content("Error: Need plugin name", "text/plain");
+			return;
+		}
+		webServerFun::eventReg_onPlayerAttack(req.get_param_value("name"));
+		//操作变量通常不会出意外，直接返回true
+		res.set_content("true", "text/plain");
+
+		});
 	//完成配置，开始监听
 	svr.listen(srv_address.c_str(), srv_port);
 	logger.error((string)"Web Server thread aborted!Web server detail:address = " + srv_address + (string)"and port = " + to_string(srv_port));
@@ -276,6 +333,10 @@ void PluginInit()
 		jsonOut["player"]["ip"] = ev.mPlayer->getIP();
 		jsonOut["player"]["xuid"] = ev.mPlayer->getXuid();
 		jsonOut["player"]["uuid"] = ev.mPlayer->getUuid();
+		jsonOut["player"]["itemHand"] = ev.mPlayer->getHandSlot()->getRawNameId();
+		jsonOut["player"]["permission"] = (int)ev.mPlayer->getPlayerPermissionLevel();
+		jsonOut["player"]["hp"] = ev.mPlayer->getHealth();
+		jsonOut["player"]["hpMax"] = ev.mPlayer->getMaxHealth();
 		jsonOut["event"]["type"] = "onPlayerJoin";
 
 		string strJsonOut = jsonOut.dump();
@@ -291,6 +352,76 @@ void PluginInit()
 
 
 
-	//启用插件
+	Event::PlayerChatEvent::subscribe([](const Event::PlayerChatEvent& ev) {
+		if (callback_onPlayerChat.size() < 1) {
+			//没有注册这个事件的，则直接返回
+			return true;
+		}
+
+		//构建json
+		json jsonOut;
+		jsonOut["player"]["name"] = ev.mPlayer->getRealName();
+		jsonOut["player"]["pos"] = ev.mPlayer->getPos().toString();
+		jsonOut["player"]["dimension"] = to_string(ev.mPlayer->getDimensionId());
+		jsonOut["player"]["ip"] = ev.mPlayer->getIP();
+		jsonOut["player"]["xuid"] = ev.mPlayer->getXuid();
+		jsonOut["player"]["uuid"] = ev.mPlayer->getUuid();
+		jsonOut["player"]["itemHand"] = ev.mPlayer->getHandSlot()->getRawNameId();
+		jsonOut["player"]["permission"] = (int)ev.mPlayer->getPlayerPermissionLevel();
+		jsonOut["player"]["hp"] = ev.mPlayer->getHealth();
+		jsonOut["player"]["hpMax"] = ev.mPlayer->getMaxHealth();
+		jsonOut["event"]["content"] = ev.mMessage;
+		jsonOut["event"]["type"] = "onPlayerChat";
+
+		string strJsonOut = jsonOut.dump();
+
+		for (int i = 0; i < callback_onPlayerJoin.size(); i++) {
+			//当前处理事件插件的名称：callback_onPlayerJoin[i]
+			::SendMessageW((HWND)apiTextBox[callback_onPlayerJoin[i]], WM_SETTEXT, 0, (LPARAM)(LPCWSTR)UTF8ToUnicode(strJsonOut).c_str());
+			//https://blog.csdn.net/Notzuonotdied/article/details/70788937 为了修复与易语言对接时编码错误导致世间万物皆乱码，全部采用Unicode
+
+		}
+		return true;
+		});
+
+
+	Event::PlayerAttackEvent::subscribe([](const Event::PlayerAttackEvent& ev) {
+		if (callback_onPlayerAttack.size() < 1) {
+			//没有注册这个事件的，则直接返回
+			return true;
+		}
+
+		//构建json
+		json jsonOut;
+		jsonOut["player"]["name"] = ev.mPlayer->getRealName();
+		jsonOut["player"]["pos"] = ev.mPlayer->getPos().toString();
+		jsonOut["player"]["dimension"] = to_string(ev.mPlayer->getDimensionId());
+		jsonOut["player"]["ip"] = ev.mPlayer->getIP();
+		jsonOut["player"]["xuid"] = ev.mPlayer->getXuid();
+		jsonOut["player"]["uuid"] = ev.mPlayer->getUuid();
+		jsonOut["player"]["itemHand"] = ev.mPlayer->getHandSlot()->getRawNameId();
+		jsonOut["player"]["permission"] = (int)ev.mPlayer->getPlayerPermissionLevel();
+		jsonOut["player"]["hp"] = ev.mPlayer->getHealth();
+		jsonOut["player"]["hpMax"] = ev.mPlayer->getMaxHealth();
+		jsonOut["target"]["type"] = ev.mTarget->getTypeName();
+		jsonOut["target"]["hp"] = ev.mTarget->getHealth();
+		jsonOut["target"]["hpMax"] = ev.mTarget->getMaxHealth();
+		jsonOut["target"]["pos"] = ev.mTarget->getPos().toString();
+		jsonOut["event"]["damage"] = ev.mAttackDamage;
+		jsonOut["event"]["type"] = "onPlayerChat";
+
+		string strJsonOut = jsonOut.dump();
+
+		for (int i = 0; i < callback_onPlayerJoin.size(); i++) {
+			//当前处理事件插件的名称：callback_onPlayerJoin[i]
+			::SendMessageW((HWND)apiTextBox[callback_onPlayerJoin[i]], WM_SETTEXT, 0, (LPARAM)(LPCWSTR)UTF8ToUnicode(strJsonOut).c_str());
+			//https://blog.csdn.net/Notzuonotdied/article/details/70788937 为了修复与易语言对接时编码错误导致世间万物皆乱码，全部采用Unicode
+
+		}
+		return true;
+		});
+
+
+	//启用插件 放在最后，避免EXE插件执行太快，在初始化完成前就开始注册事件，导致发生无法预料的错误
 	internal_run_all_plugins(_getcwd(NULL, 0));
 }
