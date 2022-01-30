@@ -1,4 +1,4 @@
-#include "pch.h"
+ï»¿#include "pch.h"
 #include <EventAPI.h>
 #include <LoggerAPI.h>
 #include <MC/Level.hpp>
@@ -26,20 +26,20 @@ string srv_address;
 int srv_port;
 httplib::Server svr;
 
-//ÊÂ¼ş·´À¡
-map<string, int> apiTextBox;//Ä¿±êµÄ±à¼­¿òµÄ¾ä±úÁĞ±í
-//map<string, int> apiButton;//Ä¿±ê°´Å¥µÄ¾ä±úÁĞ±í//ÓÃ±à¼­¿òÄÚÈİ±»¸Ä±äµÄÊÂ¼ş´úÌæ
-//¼ÇÂ¼ĞèÒªÓÃµ½»Øµ÷µÄ²å¼şµÄÁĞ±í
-vector<string> callback_onPlayerJoin;//µ±Íæ¼Ò¼ÓÈëÓÎÏ·Ê±´¥·¢
-vector<string> callback_onPlayerChat;//µ±Íæ¼Ò·¢ÑÔÊ±´¥·¢
-vector<string> callback_onPlayerAttack;//µ±Íæ¼Ò¹¥»÷ÊµÌåÊ±´¥·¢
+//äº‹ä»¶åé¦ˆ
+map<string, int> apiTextBox;//ç›®æ ‡çš„ç¼–è¾‘æ¡†çš„å¥æŸ„åˆ—è¡¨
+//map<string, int> apiButton;//ç›®æ ‡æŒ‰é’®çš„å¥æŸ„åˆ—è¡¨//ç”¨ç¼–è¾‘æ¡†å†…å®¹è¢«æ”¹å˜çš„äº‹ä»¶ä»£æ›¿
+//è®°å½•éœ€è¦ç”¨åˆ°å›è°ƒçš„æ’ä»¶çš„åˆ—è¡¨
+vector<string> callback_onPlayerJoin;//å½“ç©å®¶åŠ å…¥æ¸¸æˆæ—¶è§¦å‘
+vector<string> callback_onPlayerChat;//å½“ç©å®¶å‘è¨€æ—¶è§¦å‘
+vector<string> callback_onPlayerAttack;//å½“ç©å®¶æ”»å‡»å®ä½“æ—¶è§¦å‘
 
-//UTF8µÄstring×ª»»Îªunicode
+//UTF8çš„stringè½¬æ¢ä¸ºunicode
 wstring UTF8ToUnicode(const string& s)
 {
 	wstring result;
 
-	// »ñµÃ»º³åÇøµÄ¿í×Ö·û¸öÊı
+	// è·å¾—ç¼“å†²åŒºçš„å®½å­—ç¬¦ä¸ªæ•°
 	int length = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, NULL, 0);
 
 	wchar_t* buffer = new wchar_t[length];
@@ -52,13 +52,13 @@ wstring UTF8ToUnicode(const string& s)
 wstring string2wstring(string str)
 {
 	wstring result;
-	//»ñÈ¡»º³åÇø´óĞ¡£¬²¢ÉêÇë¿Õ¼ä£¬»º³åÇø´óĞ¡°´×Ö·û¼ÆËã  
+	//è·å–ç¼“å†²åŒºå¤§å°ï¼Œå¹¶ç”³è¯·ç©ºé—´ï¼Œç¼“å†²åŒºå¤§å°æŒ‰å­—ç¬¦è®¡ç®—  
 	int len = MultiByteToWideChar(CP_ACP, 0, str.c_str(), str.size(), NULL, 0);
 	TCHAR* buffer = new TCHAR[len + 1];
-	//¶à×Ö½Ú±àÂë×ª»»³É¿í×Ö½Ú±àÂë  
+	//å¤šå­—èŠ‚ç¼–ç è½¬æ¢æˆå®½å­—èŠ‚ç¼–ç   
 	MultiByteToWideChar(CP_ACP, 0, str.c_str(), str.size(), buffer, len);
-	buffer[len] = '\0';             //Ìí¼Ó×Ö·û´®½áÎ²  
-	//É¾³ı»º³åÇø²¢·µ»ØÖµ  
+	buffer[len] = '\0';             //æ·»åŠ å­—ç¬¦ä¸²ç»“å°¾  
+	//åˆ é™¤ç¼“å†²åŒºå¹¶è¿”å›å€¼  
 	result.append(buffer);
 	delete[] buffer;
 	return result;
@@ -66,13 +66,13 @@ wstring string2wstring(string str)
 string wstring2string(wstring wstr)
 {
 	string result;
-	//»ñÈ¡»º³åÇø´óĞ¡£¬²¢ÉêÇë¿Õ¼ä£¬»º³åÇø´óĞ¡ÊÂ°´×Ö½Ú¼ÆËãµÄ  
+	//è·å–ç¼“å†²åŒºå¤§å°ï¼Œå¹¶ç”³è¯·ç©ºé—´ï¼Œç¼“å†²åŒºå¤§å°äº‹æŒ‰å­—èŠ‚è®¡ç®—çš„  
 	int len = WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), wstr.size(), NULL, 0, NULL, NULL);
 	char* buffer = new char[len + 1];
-	//¿í×Ö½Ú±àÂë×ª»»³É¶à×Ö½Ú±àÂë  
+	//å®½å­—èŠ‚ç¼–ç è½¬æ¢æˆå¤šå­—èŠ‚ç¼–ç   
 	WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), wstr.size(), buffer, len, NULL, NULL);
 	buffer[len] = '\0';
-	//É¾³ı»º³åÇø²¢·µ»ØÖµ  
+	//åˆ é™¤ç¼“å†²åŒºå¹¶è¿”å›å€¼  
 	result.append(buffer);
 	delete[] buffer;
 	return result;
@@ -82,12 +82,12 @@ void internal_run_all_plugins(string path)
 {
 	WIN32_FIND_DATAW wfd;
 	LPWSTR pszPath = (LPWSTR)(string2wstring(path+"\\plugins\\FBDSRT\\plugins\\*.fbdsplugin.exe").c_str());
-	//TODO:ÔÚ´Ë¶¨ÒåÓûÃ¶¾ÙÎÄ¼şÄ¿Â¼£¨C·ç¸ñ×Ö·û´®£©
-	HANDLE hFind = FindFirstFileW(pszPath, &wfd);//¿ªÊ¼Ã¶¾Ù
+	//TODO:åœ¨æ­¤å®šä¹‰æ¬²æšä¸¾æ–‡ä»¶ç›®å½•ï¼ˆCé£æ ¼å­—ç¬¦ä¸²ï¼‰
+	HANDLE hFind = FindFirstFileW(pszPath, &wfd);//å¼€å§‹æšä¸¾
 	if (hFind == INVALID_HANDLE_VALUE)
 	{
 		//MessageBoxW(NULL, L"111", L"111", 0);
-		//TODO:ÔÚ´ËÌí¼Ó´íÎó´¦Àí´úÂë
+		//TODO:åœ¨æ­¤æ·»åŠ é”™è¯¯å¤„ç†ä»£ç 
 		//cout << "fuck";
 		cout << "Something went wrong\n";
 		cout << GetLastError();
@@ -98,11 +98,11 @@ void internal_run_all_plugins(string path)
 	{
 		if (PathIsDirectoryW(wfd.cFileName) == (BOOL)FILE_ATTRIBUTE_DIRECTORY)
 		{
-			//TODO:ÔÚ´Ë´¦ÀíÃ¶¾Ùµ½µÄ×ÓÄ¿Â¼£¬wfd.cFileNameÎªÄ¿Â¼ÃûµÄC·ç¸ñ×Ö·û´®
+			//TODO:åœ¨æ­¤å¤„ç†æšä¸¾åˆ°çš„å­ç›®å½•ï¼Œwfd.cFileNameä¸ºç›®å½•åçš„Cé£æ ¼å­—ç¬¦ä¸²
 		}
 		else
 		{
-			//TODO:ÔÚ´Ë´¦ÀíÃ¶¾Ùµ½µÄÎÄ¼ş£¬wfd.cFileNameÎªÎÄ¼şÃûµÄC·ç¸ñ×Ö·û´®
+			//TODO:åœ¨æ­¤å¤„ç†æšä¸¾åˆ°çš„æ–‡ä»¶ï¼Œwfd.cFileNameä¸ºæ–‡ä»¶åçš„Cé£æ ¼å­—ç¬¦ä¸²
 			ShellExecuteA(NULL, NULL, (path + (string)"\\plugins\\FBDSRT\\plugins\\" + wstring2string((wstring)wfd.cFileName)).c_str(), NULL, (path + (string)"\\plugins\\FBDSRT\\plugins").c_str(), NULL);
 			cout << "Start FBDSPlugin:" << path + (string)"\\plugins\\FBDSRT\\plugins\\" << wstring2string((wstring)wfd.cFileName) << "\n";
 		}
@@ -116,14 +116,14 @@ void internal_run_all_plugins(string path)
 class webServerFun {
 public:
 	static bool safety_check(string key) {
-		//°²¼ì£¬È·ÈÏÃÜÔ¿ÕıÈ·£¨Õâ´úÂë¿´ÆğÀ´ÓĞµã·Ï£¬Ö±½Ó¶Ô±È¾ÍºÃÁË£¬µ«ÊÇÎªÁË·½±ãÍòÒ»ÒÔºóÒª¸ãÊ²Ã´»¨ÀïºúÉÚµÄ£©
+		//å®‰æ£€ï¼Œç¡®è®¤å¯†é’¥æ­£ç¡®ï¼ˆè¿™ä»£ç çœ‹èµ·æ¥æœ‰ç‚¹åºŸï¼Œç›´æ¥å¯¹æ¯”å°±å¥½äº†ï¼Œä½†æ˜¯ä¸ºäº†æ–¹ä¾¿ä¸‡ä¸€ä»¥åè¦æä»€ä¹ˆèŠ±é‡Œèƒ¡å“¨çš„ï¼‰
 		if (key == securityKey) {
 			return true;
 		} else {
 			return false;
 		}
 	}
-	static bool runcmd(string yourCMD) {//Ö´ĞĞÃüÁîµÄÊµÏÖº¯Êı
+	static bool runcmd(string yourCMD) {//æ‰§è¡Œå‘½ä»¤çš„å®ç°å‡½æ•°
 		return Level::runcmd(yourCMD);
 	}
 
@@ -131,59 +131,59 @@ public:
 		if (apiTextBox.find(pluginName) != apiTextBox.end()) {
 			return false;
 		}
-		//½«¾ä±úÌí¼Óµ½ÁĞ±í
+		//å°†å¥æŸ„æ·»åŠ åˆ°åˆ—è¡¨
 		apiTextBox.insert(pair<string, int>(pluginName, hwndTextBox));
 		return true;
 	}
 
 	static void eventReg_onPlayerJoin(string pluginName) {
 		vector<string>::iterator it = find(callback_onPlayerJoin.begin(), callback_onPlayerJoin.end(), pluginName);
-		if (it != callback_onPlayerJoin.end()) {//Èç¹ûÒÑ¾­´æÔÚÔòÖ±½Ó·µ»Ø
+		if (it != callback_onPlayerJoin.end()) {//å¦‚æœå·²ç»å­˜åœ¨åˆ™ç›´æ¥è¿”å›
 			return;
 		}
-		//½«²å¼ş±êÊ¶Ãû³ÆÌí¼Óµ½¶ÔÓ¦µÄAPIÊÂ¼şÁĞ±í
+		//å°†æ’ä»¶æ ‡è¯†åç§°æ·»åŠ åˆ°å¯¹åº”çš„APIäº‹ä»¶åˆ—è¡¨
 		callback_onPlayerJoin.push_back(pluginName);
 
 	}
 
 	static void eventReg_onPlayerChat(string pluginName) {
 		vector<string>::iterator it = find(callback_onPlayerChat.begin(), callback_onPlayerChat.end(), pluginName);
-		if (it != callback_onPlayerChat.end()) {//Èç¹ûÒÑ¾­´æÔÚÔòÖ±½Ó·µ»Ø
+		if (it != callback_onPlayerChat.end()) {//å¦‚æœå·²ç»å­˜åœ¨åˆ™ç›´æ¥è¿”å›
 			return;
 		}
-		//½«²å¼ş±êÊ¶Ãû³ÆÌí¼Óµ½¶ÔÓ¦µÄAPIÊÂ¼şÁĞ±í
+		//å°†æ’ä»¶æ ‡è¯†åç§°æ·»åŠ åˆ°å¯¹åº”çš„APIäº‹ä»¶åˆ—è¡¨
 		callback_onPlayerChat.push_back(pluginName);
 
 	}
 
 	static void eventReg_onPlayerAttack(string pluginName) {
 		vector<string>::iterator it = find(callback_onPlayerAttack.begin(), callback_onPlayerAttack.end(), pluginName);
-		if (it != callback_onPlayerAttack.end()) {//Èç¹ûÒÑ¾­´æÔÚÔòÖ±½Ó·µ»Ø
+		if (it != callback_onPlayerAttack.end()) {//å¦‚æœå·²ç»å­˜åœ¨åˆ™ç›´æ¥è¿”å›
 			return;
 		}
-		//½«²å¼ş±êÊ¶Ãû³ÆÌí¼Óµ½¶ÔÓ¦µÄAPIÊÂ¼şÁĞ±í
+		//å°†æ’ä»¶æ ‡è¯†åç§°æ·»åŠ åˆ°å¯¹åº”çš„APIäº‹ä»¶åˆ—è¡¨
 		callback_onPlayerAttack.push_back(pluginName);
 
 	}
 };
 
-//web·şÎñÆ÷µÄÏß³Ì£¬ÎªÁË·ÀÖ¹web·şÎñÆ÷×èÈûÖ÷Ïß³Ì
+//webæœåŠ¡å™¨çš„çº¿ç¨‹ï¼Œä¸ºäº†é˜²æ­¢webæœåŠ¡å™¨é˜»å¡ä¸»çº¿ç¨‹
 void thread_webServer() {
-	//ÅäÖÃ¸÷ÖÖ¹¦ÄÜµÄÂ·¾¶
-	//ÔËĞĞÃüÁî ²ÎÊı£º
-	//cmd ÒªÖ´ĞĞµÄÃüÁî
+	//é…ç½®å„ç§åŠŸèƒ½çš„è·¯å¾„
+	//è¿è¡Œå‘½ä»¤ å‚æ•°ï¼š
+	//cmd è¦æ‰§è¡Œçš„å‘½ä»¤
 	svr.Get("/runcmd", [](const httplib::Request& req, httplib::Response& res) {
 		if (!webServerFun::safety_check(req.get_param_value("key"))) {
 			res.set_content("Error: Need key", "text/plain");
 			return;
 		}
 
-	//²»³öÒâÍâ£¬·µ»Ø½á¹û±ä³ÉÎÄ×ÖµÄboolÀàĞÍ
+	//ä¸å‡ºæ„å¤–ï¼Œè¿”å›ç»“æœå˜æˆæ–‡å­—çš„boolç±»å‹
 		res.set_content(to_string(webServerFun::runcmd(req.get_param_value("cmd"))), "text/plain");
 		});
 
-	//×¢²á²å¼ş
-	//²ÎÊı£ºname ²å¼şÃû³Æ; hwnd ±à¼­¿ò¾ä±ú
+	//æ³¨å†Œæ’ä»¶
+	//å‚æ•°ï¼šname æ’ä»¶åç§°; hwnd ç¼–è¾‘æ¡†å¥æŸ„
 	svr.Get("/pluginReg", [](const httplib::Request& req, httplib::Response& res) {
 		if (!webServerFun::safety_check(req.get_param_value("key"))) {
 			res.set_content("Error: Need key", "text/plain");
@@ -203,69 +203,69 @@ void thread_webServer() {
 		}
 		});
 
-	//×¢²á»Øµ÷ÊÂ¼ş
-	//ÔÚÍæ¼Ò¼ÓÈëÓÎÏ·Ê±´¥·¢ÊÂ¼ş ²ÎÊı£º
-	//name ²å¼şÃû³Æ
+	//æ³¨å†Œå›è°ƒäº‹ä»¶
+	//åœ¨ç©å®¶åŠ å…¥æ¸¸æˆæ—¶è§¦å‘äº‹ä»¶ å‚æ•°ï¼š
+	//name æ’ä»¶åç§°
 	svr.Get("/eventReg_onPlayerJoin", [](const httplib::Request& req, httplib::Response& res) {
 		if (!webServerFun::safety_check(req.get_param_value("key"))) {
 			res.set_content("Error: Need key", "text/plain");
 			return;
 		}
 
-		//²»³öÒâÍâ£¬µ÷ÓÃÏà¹Ø°ó¶¨·½·¨
+		//ä¸å‡ºæ„å¤–ï¼Œè°ƒç”¨ç›¸å…³ç»‘å®šæ–¹æ³•
 		if (req.get_param_value("name") == "") {
 			res.set_content("Error: Need plugin name", "text/plain");
 			return;
 		}
 		webServerFun::eventReg_onPlayerJoin(req.get_param_value("name"));
-		//²Ù×÷±äÁ¿Í¨³£²»»á³öÒâÍâ£¬Ö±½Ó·µ»Øtrue
+		//æ“ä½œå˜é‡é€šå¸¸ä¸ä¼šå‡ºæ„å¤–ï¼Œç›´æ¥è¿”å›true
 		res.set_content("true", "text/plain");
 
 		});
 
-	//ÔÚÍæ¼Ò·¢ÑÔÊ±´¥·¢ÊÂ¼ş ²ÎÊıÍ¬ÉÏ
+	//åœ¨ç©å®¶å‘è¨€æ—¶è§¦å‘äº‹ä»¶ å‚æ•°åŒä¸Š
 	svr.Get("/eventReg_onPlayerChat", [](const httplib::Request& req, httplib::Response& res) {
 		if (!webServerFun::safety_check(req.get_param_value("key"))) {
 			res.set_content("Error: Need key", "text/plain");
 			return;
 		}
 
-		//²»³öÒâÍâ£¬µ÷ÓÃÏà¹Ø°ó¶¨·½·¨
+		//ä¸å‡ºæ„å¤–ï¼Œè°ƒç”¨ç›¸å…³ç»‘å®šæ–¹æ³•
 		if (req.get_param_value("name") == "") {
 			res.set_content("Error: Need plugin name", "text/plain");
 			return;
 		}
 		webServerFun::eventReg_onPlayerChat(req.get_param_value("name"));
-		//²Ù×÷±äÁ¿Í¨³£²»»á³öÒâÍâ£¬Ö±½Ó·µ»Øtrue
+		//æ“ä½œå˜é‡é€šå¸¸ä¸ä¼šå‡ºæ„å¤–ï¼Œç›´æ¥è¿”å›true
 		res.set_content("true", "text/plain");
 
 		});
 
 
-	//ÔÚÍæ¼Ò¹¥»÷ÊµÌåÊ±´¥·¢ÊÂ¼ş ²ÎÊıÍ¬ÉÏ
+	//åœ¨ç©å®¶æ”»å‡»å®ä½“æ—¶è§¦å‘äº‹ä»¶ å‚æ•°åŒä¸Š
 	svr.Get("/eventReg_onPlayerAttack", [](const httplib::Request& req, httplib::Response& res) {
 		if (!webServerFun::safety_check(req.get_param_value("key"))) {
 			res.set_content("Error: Need key", "text/plain");
 			return;
 		}
 
-		//²»³öÒâÍâ£¬µ÷ÓÃÏà¹Ø°ó¶¨·½·¨
+		//ä¸å‡ºæ„å¤–ï¼Œè°ƒç”¨ç›¸å…³ç»‘å®šæ–¹æ³•
 		if (req.get_param_value("name") == "") {
 			res.set_content("Error: Need plugin name", "text/plain");
 			return;
 		}
 		webServerFun::eventReg_onPlayerAttack(req.get_param_value("name"));
-		//²Ù×÷±äÁ¿Í¨³£²»»á³öÒâÍâ£¬Ö±½Ó·µ»Øtrue
+		//æ“ä½œå˜é‡é€šå¸¸ä¸ä¼šå‡ºæ„å¤–ï¼Œç›´æ¥è¿”å›true
 		res.set_content("true", "text/plain");
 
 		});
-	//Íê³ÉÅäÖÃ£¬¿ªÊ¼¼àÌı
+	//å®Œæˆé…ç½®ï¼Œå¼€å§‹ç›‘å¬
 	svr.listen(srv_address.c_str(), srv_port);
 	logger.error((string)"Web Server thread aborted!Web server detail:address = " + srv_address + (string)"and port = " + to_string(srv_port));
 }
 
 
-//¸ÃËÀµÄ²å¼şÈë¿Ú
+//è¯¥æ­»çš„æ’ä»¶å…¥å£
 void PluginInit()
 {
 	//static_assert(false, "Please modify your plugin registration details and delete this line");
@@ -279,12 +279,12 @@ void PluginInit()
 	if (fileConfigData == "") {
 		logger.warn("There is not an available config file, now create one automaticly");
 
-		//´´½¨Ä¬ÈÏÅäÖÃÎÄ¼ş
+		//åˆ›å»ºé»˜è®¤é…ç½®æ–‡ä»¶
 		jsonConfig["WebAPI"]["address"] = "0.0.0.0";
 		jsonConfig["WebAPI"]["port"] = 1984;
 		jsonConfig["Security"]["key"] = "iruanp.com";
 
-		//Ğ´ÈëÄ¬ÈÏÅäÖÃÎÄ¼ş
+		//å†™å…¥é»˜è®¤é…ç½®æ–‡ä»¶
 		try {
 			system("mkdir .\\plugins\\FBDSRT");
 			ofstream fileConfigWrite(".\\plugins\\FBDSRT\\config.json");
@@ -301,9 +301,16 @@ void PluginInit()
 	}
 	
 	logger.info("Config file loaded successfully");
+
+
+
+	//åˆ›å»ºé»˜è®¤é¡µ
 	svr.Get("/", [](const httplib::Request&, httplib::Response& res) {
 		res.set_content("Welcome to FBDSRT default page!Visit iruanp.com for more detail", "text/plain");
 		});
+
+
+	//åˆ›å»ºwebæœåŠ¡å™¨çº¿ç¨‹
 	try {
 		srv_address = (string)jsonConfig["WebAPI"]["address"].get<string>();
 		srv_port = jsonConfig["WebAPI"]["port"].get<int>();
@@ -317,15 +324,16 @@ void PluginInit()
 
 
 
-	//Web·şÎñÆ÷¾ÍĞ÷£¬¿ªÊ¼×¢²áÊÂ¼ş
-	//±È½ÏÀÁ£¬ÊÂ¼ş¾ÍÖ±½ÓĞ´ÔÚÕâÀïÁË
+	//WebæœåŠ¡å™¨å°±ç»ªï¼Œå¼€å§‹æ³¨å†Œäº‹ä»¶
+	//æ¯”è¾ƒæ‡’ï¼Œäº‹ä»¶å°±ç›´æ¥å†™åœ¨è¿™é‡Œäº†
 	Event::PlayerJoinEvent::subscribe([](const Event::PlayerJoinEvent& ev) {
 		if (callback_onPlayerJoin.size() < 1) {
-			//Ã»ÓĞ×¢²áÕâ¸öÊÂ¼şµÄ£¬ÔòÖ±½Ó·µ»Ø
+			//æ²¡æœ‰æ³¨å†Œè¿™ä¸ªäº‹ä»¶çš„ï¼Œåˆ™ç›´æ¥è¿”å›
 			return true;
 		}
 
-		//¹¹½¨json
+
+		//æ„å»ºjson
 		json jsonOut;
 		jsonOut["player"]["name"] = ev.mPlayer->getRealName();
 		jsonOut["player"]["pos"] = ev.mPlayer->getPos().toString();
@@ -333,18 +341,19 @@ void PluginInit()
 		jsonOut["player"]["ip"] = ev.mPlayer->getIP();
 		jsonOut["player"]["xuid"] = ev.mPlayer->getXuid();
 		jsonOut["player"]["uuid"] = ev.mPlayer->getUuid();
-		jsonOut["player"]["itemHand"] = ev.mPlayer->getHandSlot()->getRawNameId();
-		jsonOut["player"]["permission"] = (int)ev.mPlayer->getPlayerPermissionLevel();
-		jsonOut["player"]["hp"] = ev.mPlayer->getHealth();
-		jsonOut["player"]["hpMax"] = ev.mPlayer->getMaxHealth();
+		//jsonOut["player"]["itemHand"] = ev.mPlayer->getHandSlot()->getRawNameId();
+		//jsonOut["player"]["permission"] = (int)ev.mPlayer->getPlayerPermissionLevel();
+		//jsonOut["player"]["hp"] = ev.mPlayer->getHealth();
+		//jsonOut["player"]["hpMax"] = ev.mPlayer->getMaxHealth();
+		//ä»¥ä¸Šå››è¡Œä»£ç æŠ¥é”™ï¼ŒåŸå› æš‚ä¸æ˜ï¼šError: Code[126] The specified module could not be found
 		jsonOut["event"]["type"] = "onPlayerJoin";
 
 		string strJsonOut = jsonOut.dump();
 
 		for (int i = 0; i < callback_onPlayerJoin.size(); i++) {
-			//µ±Ç°´¦ÀíÊÂ¼ş²å¼şµÄÃû³Æ£ºcallback_onPlayerJoin[i]
+			//å½“å‰å¤„ç†äº‹ä»¶æ’ä»¶çš„åç§°ï¼šcallback_onPlayerJoin[i]
 			::SendMessageW((HWND)apiTextBox[callback_onPlayerJoin[i]], WM_SETTEXT, 0, (LPARAM)(LPCWSTR)UTF8ToUnicode(strJsonOut).c_str());
-			//https://blog.csdn.net/Notzuonotdied/article/details/70788937 ÎªÁËĞŞ¸´ÓëÒ×ÓïÑÔ¶Ô½ÓÊ±±àÂë´íÎóµ¼ÖÂÊÀ¼äÍòÎï½ÔÂÒÂë£¬È«²¿²ÉÓÃUnicode
+			//https://blog.csdn.net/Notzuonotdied/article/details/70788937 ä¸ºäº†ä¿®å¤ä¸æ˜“è¯­è¨€å¯¹æ¥æ—¶ç¼–ç é”™è¯¯å¯¼è‡´ä¸–é—´ä¸‡ç‰©çš†ä¹±ç ï¼Œå…¨éƒ¨é‡‡ç”¨Unicode
 
 		}
 		return true;
@@ -354,11 +363,11 @@ void PluginInit()
 
 	Event::PlayerChatEvent::subscribe([](const Event::PlayerChatEvent& ev) {
 		if (callback_onPlayerChat.size() < 1) {
-			//Ã»ÓĞ×¢²áÕâ¸öÊÂ¼şµÄ£¬ÔòÖ±½Ó·µ»Ø
+			//æ²¡æœ‰æ³¨å†Œè¿™ä¸ªäº‹ä»¶çš„ï¼Œåˆ™ç›´æ¥è¿”å›
 			return true;
 		}
 
-		//¹¹½¨json
+		//æ„å»ºjson
 		json jsonOut;
 		jsonOut["player"]["name"] = ev.mPlayer->getRealName();
 		jsonOut["player"]["pos"] = ev.mPlayer->getPos().toString();
@@ -366,19 +375,19 @@ void PluginInit()
 		jsonOut["player"]["ip"] = ev.mPlayer->getIP();
 		jsonOut["player"]["xuid"] = ev.mPlayer->getXuid();
 		jsonOut["player"]["uuid"] = ev.mPlayer->getUuid();
-		jsonOut["player"]["itemHand"] = ev.mPlayer->getHandSlot()->getRawNameId();
-		jsonOut["player"]["permission"] = (int)ev.mPlayer->getPlayerPermissionLevel();
-		jsonOut["player"]["hp"] = ev.mPlayer->getHealth();
-		jsonOut["player"]["hpMax"] = ev.mPlayer->getMaxHealth();
+		//jsonOut["player"]["itemHand"] = ev.mPlayer->getHandSlot()->getRawNameId();
+		//jsonOut["player"]["permission"] = (int)ev.mPlayer->getPlayerPermissionLevel();
+		//jsonOut["player"]["hp"] = ev.mPlayer->getHealth();
+		//jsonOut["player"]["hpMax"] = ev.mPlayer->getMaxHealth();
 		jsonOut["event"]["content"] = ev.mMessage;
 		jsonOut["event"]["type"] = "onPlayerChat";
 
 		string strJsonOut = jsonOut.dump();
 
 		for (int i = 0; i < callback_onPlayerJoin.size(); i++) {
-			//µ±Ç°´¦ÀíÊÂ¼ş²å¼şµÄÃû³Æ£ºcallback_onPlayerJoin[i]
+			//å½“å‰å¤„ç†äº‹ä»¶æ’ä»¶çš„åç§°ï¼šcallback_onPlayerJoin[i]
 			::SendMessageW((HWND)apiTextBox[callback_onPlayerJoin[i]], WM_SETTEXT, 0, (LPARAM)(LPCWSTR)UTF8ToUnicode(strJsonOut).c_str());
-			//https://blog.csdn.net/Notzuonotdied/article/details/70788937 ÎªÁËĞŞ¸´ÓëÒ×ÓïÑÔ¶Ô½ÓÊ±±àÂë´íÎóµ¼ÖÂÊÀ¼äÍòÎï½ÔÂÒÂë£¬È«²¿²ÉÓÃUnicode
+			//https://blog.csdn.net/Notzuonotdied/article/details/70788937 ä¸ºäº†ä¿®å¤ä¸æ˜“è¯­è¨€å¯¹æ¥æ—¶ç¼–ç é”™è¯¯å¯¼è‡´ä¸–é—´ä¸‡ç‰©çš†ä¹±ç ï¼Œå…¨éƒ¨é‡‡ç”¨Unicode
 
 		}
 		return true;
@@ -387,11 +396,11 @@ void PluginInit()
 
 	Event::PlayerAttackEvent::subscribe([](const Event::PlayerAttackEvent& ev) {
 		if (callback_onPlayerAttack.size() < 1) {
-			//Ã»ÓĞ×¢²áÕâ¸öÊÂ¼şµÄ£¬ÔòÖ±½Ó·µ»Ø
+			//æ²¡æœ‰æ³¨å†Œè¿™ä¸ªäº‹ä»¶çš„ï¼Œåˆ™ç›´æ¥è¿”å›
 			return true;
 		}
 
-		//¹¹½¨json
+		//æ„å»ºjson
 		json jsonOut;
 		jsonOut["player"]["name"] = ev.mPlayer->getRealName();
 		jsonOut["player"]["pos"] = ev.mPlayer->getPos().toString();
@@ -399,29 +408,29 @@ void PluginInit()
 		jsonOut["player"]["ip"] = ev.mPlayer->getIP();
 		jsonOut["player"]["xuid"] = ev.mPlayer->getXuid();
 		jsonOut["player"]["uuid"] = ev.mPlayer->getUuid();
-		jsonOut["player"]["itemHand"] = ev.mPlayer->getHandSlot()->getRawNameId();
-		jsonOut["player"]["permission"] = (int)ev.mPlayer->getPlayerPermissionLevel();
-		jsonOut["player"]["hp"] = ev.mPlayer->getHealth();
-		jsonOut["player"]["hpMax"] = ev.mPlayer->getMaxHealth();
-		jsonOut["target"]["type"] = ev.mTarget->getTypeName();
-		jsonOut["target"]["hp"] = ev.mTarget->getHealth();
-		jsonOut["target"]["hpMax"] = ev.mTarget->getMaxHealth();
+		//jsonOut["player"]["itemHand"] = ev.mPlayer->getHandSlot()->getRawNameId();
+		//jsonOut["player"]["permission"] = (int)ev.mPlayer->getPlayerPermissionLevel();
+		//jsonOut["player"]["hp"] = ev.mPlayer->getHealth();
+		//jsonOut["player"]["hpMax"] = ev.mPlayer->getMaxHealth();
+		//jsonOut["target"]["type"] = ev.mTarget->getTypeName();
+		//jsonOut["target"]["hp"] = ev.mTarget->getHealth();
+		//jsonOut["target"]["hpMax"] = ev.mTarget->getMaxHealth();
 		jsonOut["target"]["pos"] = ev.mTarget->getPos().toString();
-		jsonOut["event"]["damage"] = ev.mAttackDamage;
-		jsonOut["event"]["type"] = "onPlayerChat";
+		//jsonOut["event"]["damage"] = ev.mAttackDamage;
+		jsonOut["event"]["type"] = "onPlayÃ„ttack";
 
 		string strJsonOut = jsonOut.dump();
 
 		for (int i = 0; i < callback_onPlayerJoin.size(); i++) {
-			//µ±Ç°´¦ÀíÊÂ¼ş²å¼şµÄÃû³Æ£ºcallback_onPlayerJoin[i]
+			//å½“å‰å¤„ç†äº‹ä»¶æ’ä»¶çš„åç§°ï¼šcallback_onPlayerJoin[i]
 			::SendMessageW((HWND)apiTextBox[callback_onPlayerJoin[i]], WM_SETTEXT, 0, (LPARAM)(LPCWSTR)UTF8ToUnicode(strJsonOut).c_str());
-			//https://blog.csdn.net/Notzuonotdied/article/details/70788937 ÎªÁËĞŞ¸´ÓëÒ×ÓïÑÔ¶Ô½ÓÊ±±àÂë´íÎóµ¼ÖÂÊÀ¼äÍòÎï½ÔÂÒÂë£¬È«²¿²ÉÓÃUnicode
+			//https://blog.csdn.net/Notzuonotdied/article/details/70788937 ä¸ºäº†ä¿®å¤ä¸æ˜“è¯­è¨€å¯¹æ¥æ—¶ç¼–ç é”™è¯¯å¯¼è‡´ä¸–é—´ä¸‡ç‰©çš†ä¹±ç ï¼Œå…¨éƒ¨é‡‡ç”¨Unicode
 
 		}
 		return true;
 		});
 
 
-	//ÆôÓÃ²å¼ş ·ÅÔÚ×îºó£¬±ÜÃâEXE²å¼şÖ´ĞĞÌ«¿ì£¬ÔÚ³õÊ¼»¯Íê³ÉÇ°¾Í¿ªÊ¼×¢²áÊÂ¼ş£¬µ¼ÖÂ·¢ÉúÎŞ·¨Ô¤ÁÏµÄ´íÎó
+	//å¯ç”¨æ’ä»¶ æ”¾åœ¨æœ€åï¼Œé¿å…EXEæ’ä»¶æ‰§è¡Œå¤ªå¿«ï¼Œåœ¨åˆå§‹åŒ–å®Œæˆå‰å°±å¼€å§‹æ³¨å†Œäº‹ä»¶ï¼Œå¯¼è‡´å‘ç”Ÿæ— æ³•é¢„æ–™çš„é”™è¯¯
 	internal_run_all_plugins(_getcwd(NULL, 0));
 }

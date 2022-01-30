@@ -3,5 +3,8 @@
 加入事件 玩家进入游戏
 
 b2:
-加入事件 玩家发言 未测试
-返回的json中加入了更多的玩家信息(权限等级、手持物品ID、生命、最大生命等)
+加入事件 玩家发言、玩家攻击实体 未测试
+返回的json中加入了更多的玩家信息(暂时砍了，不知道为什么会报错)
+[00:56:09 Error][LiteLoader] Fail to load plugin <FBDSRT.dll>
+[00:56:09 Error][LiteLoader] Error: Code[126] The specified module could not be found.
+知道的请务必帮忙修一下，或者在issue里给点解决办法
