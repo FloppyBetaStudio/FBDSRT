@@ -341,10 +341,10 @@ void PluginInit()
 		jsonOut["player"]["ip"] = ev.mPlayer->getIP();
 		jsonOut["player"]["xuid"] = ev.mPlayer->getXuid();
 		jsonOut["player"]["uuid"] = ev.mPlayer->getUuid();
-		//jsonOut["player"]["itemHand"] = ev.mPlayer->getHandSlot()->getRawNameId();
-		//jsonOut["player"]["permission"] = (int)ev.mPlayer->getPlayerPermissionLevel();
-		//jsonOut["player"]["hp"] = ev.mPlayer->getHealth();
-		//jsonOut["player"]["hpMax"] = ev.mPlayer->getMaxHealth();
+		jsonOut["player"]["itemHand"] = ev.mPlayer->getHandSlot()->getRawNameId();
+		jsonOut["player"]["permission"] = (int)ev.mPlayer->getPlayerPermissionLevel();
+		jsonOut["player"]["hp"] = ev.mPlayer->getHealth();
+		jsonOut["player"]["hpMax"] = ev.mPlayer->getMaxHealth();
 		//以上四行代码报错，原因暂不明：Error: Code[126] The specified module could not be found
 		jsonOut["event"]["type"] = "onPlayerJoin";
 
@@ -375,10 +375,10 @@ void PluginInit()
 		jsonOut["player"]["ip"] = ev.mPlayer->getIP();
 		jsonOut["player"]["xuid"] = ev.mPlayer->getXuid();
 		jsonOut["player"]["uuid"] = ev.mPlayer->getUuid();
-		//jsonOut["player"]["itemHand"] = ev.mPlayer->getHandSlot()->getRawNameId();
-		//jsonOut["player"]["permission"] = (int)ev.mPlayer->getPlayerPermissionLevel();
-		//jsonOut["player"]["hp"] = ev.mPlayer->getHealth();
-		//jsonOut["player"]["hpMax"] = ev.mPlayer->getMaxHealth();
+		jsonOut["player"]["itemHand"] = ev.mPlayer->getHandSlot()->getRawNameId();
+		jsonOut["player"]["permission"] = (int)ev.mPlayer->getPlayerPermissionLevel();
+		jsonOut["player"]["hp"] = ev.mPlayer->getHealth();
+		jsonOut["player"]["hpMax"] = ev.mPlayer->getMaxHealth();
 		jsonOut["event"]["content"] = ev.mMessage;
 		jsonOut["event"]["type"] = "onPlayerChat";
 
@@ -408,15 +408,15 @@ void PluginInit()
 		jsonOut["player"]["ip"] = ev.mPlayer->getIP();
 		jsonOut["player"]["xuid"] = ev.mPlayer->getXuid();
 		jsonOut["player"]["uuid"] = ev.mPlayer->getUuid();
-		//jsonOut["player"]["itemHand"] = ev.mPlayer->getHandSlot()->getRawNameId();
-		//jsonOut["player"]["permission"] = (int)ev.mPlayer->getPlayerPermissionLevel();
-		//jsonOut["player"]["hp"] = ev.mPlayer->getHealth();
-		//jsonOut["player"]["hpMax"] = ev.mPlayer->getMaxHealth();
-		//jsonOut["target"]["type"] = ev.mTarget->getTypeName();
-		//jsonOut["target"]["hp"] = ev.mTarget->getHealth();
-		//jsonOut["target"]["hpMax"] = ev.mTarget->getMaxHealth();
+		jsonOut["player"]["itemHand"] = ev.mPlayer->getHandSlot()->getRawNameId();
+		jsonOut["player"]["permission"] = (int)ev.mPlayer->getPlayerPermissionLevel();
+		jsonOut["player"]["hp"] = ev.mPlayer->getHealth();
+		jsonOut["player"]["hpMax"] = ev.mPlayer->getMaxHealth();
+		jsonOut["target"]["type"] = ev.mTarget->getTypeName();
+		jsonOut["target"]["hp"] = ev.mTarget->getHealth();
+		jsonOut["target"]["hpMax"] = ev.mTarget->getMaxHealth();
 		jsonOut["target"]["pos"] = ev.mTarget->getPos().toString();
-		//jsonOut["event"]["damage"] = ev.mAttackDamage;
+		jsonOut["event"]["damage"] = ev.mAttackDamage;
 		jsonOut["event"]["type"] = "onPlayÄttack";
 
 		string strJsonOut = jsonOut.dump();
@@ -430,7 +430,10 @@ void PluginInit()
 		return true;
 		});
 
-
+	Event::ServerStoppedEvent::subscribe([](const Event::ServerStoppedEvent& ev) {
+		system("taskkill /f /im *.fbdsplugin.exe");
+		return true;
+	});
 	//启用插件 放在最后，避免EXE插件执行太快，在初始化完成前就开始注册事件，导致发生无法预料的错误
 	internal_run_all_plugins(_getcwd(NULL, 0));
 }

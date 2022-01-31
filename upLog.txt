@@ -8,3 +8,9 @@ b2:
 [00:56:09 Error][LiteLoader] Fail to load plugin <FBDSRT.dll>
 [00:56:09 Error][LiteLoader] Error: Code[126] The specified module could not be found.
 知道的请务必帮忙修一下，或者在issue里给点解决办法
+
+b3:
+把b2砍掉的东西补回来了
+增加了一个很暴力的关闭服务端时自动退出所有插件
+然后咕咕咕
+还没测试过，先摸鱼去了
