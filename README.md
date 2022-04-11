@@ -1,6 +1,8 @@
 # FBDSRT
 Floppy BDS Runtime: A "cross-language runtime framework" for Minecraft BDS
 
+## 由于此项目没有被实际应用到，故此项目暂时搁置
+
 ## 大鸽子的公告
 
 管理这个仓库的人是个大鸽子，没有人知道距离这个仓库下一次增加新的功能是什么时候。现在可用的事件和功能少得可怜，后续会***真·慢慢更新***出来的。
